@@ -1,0 +1,95 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_REGISTRY_URL = 'https://registry.example.com'
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        KUBECONFIG_CREDENTIALS = credentials('kubeconfig-credentials')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                parallel(
+                    frontend: {
+                        script {
+                            dir('containerization/ariane') {
+                                docker.build('ariane-image')
+                                docker.withRegistry("${DOCKER_REGISTRY_URL}", DOCKER_HUB_CREDENTIALS) {
+                                    docker.image('ariane-image').push('latest')
+                                }
+                            }
+                        }
+                    },
+                    backend: {
+                        script {
+                            dir('containerization/falcon') {
+                                docker.build('falcon-image')
+                                docker.withRegistry("${DOCKER_REGISTRY_URL}", DOCKER_HUB_CREDENTIALS) {
+                                    docker.image('falcon-image').push('latest')
+                                }
+                            }
+                        }
+                    },
+                    redis: {
+                        script {
+                            dir('containerization/redis') {
+                                docker.build('redis-image')
+                                docker.withRegistry("${DOCKER_REGISTRY_URL}", DOCKER_HUB_CREDENTIALS) {
+                                    docker.image('redis-image').push('latest')
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                parallel(
+                    frontend: {
+                        script {
+                            dir('containerization/ariane') {
+                                sh 'npm install'
+                                sh 'npm run test'
+                            }
+                        }
+                    },
+                    backend: {
+                        script {
+                            dir('containerization/falcon') {
+                                sh 'npm install'
+                                sh 'npm test'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig-credentials', variable: 'KUBECONFIG')]) {
+                    sh 'echo "$KUBECONFIG" > $HOME/.kube/config'
+                }
+
+                script {
+                    def kubeDeploy = { app, image ->
+                        sh "kubectl set image deployment/${app}-deployment ${app}=${image}:latest"
+                    }
+
+                    kubeDeploy('ariane', 'ariane-image')
+                    kubeDeploy('falcon', 'falcon-image')
+                    kubeDeploy('redis', 'redis-image')
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,15 @@
+---
+- name: Download and copy prrtprrt.txt file
+  block:
+    - name: Download prrtprrt.txt file
+      get_url:
+        url: "https://gist.githubusercontent.com/slgevens/aa9a2fc52cb5fef8b41c1b11a8b7d3e3/raw/dc1e3e288967bd4818277e4688d1daf615225337/prrtprrt.txt"
+        dest: "files/prrtprrt.txt"
+      tags: file
+
+    - name: Copy prrtprrt.txt file to user directories
+      copy:
+        src: "files/prrtprrt.txt"
+        dest: "/home/{{ item.key }}/prrtprrt.txt"
+      with_dict: "{{ user_accounts }}"
+      tags: file

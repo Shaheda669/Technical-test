@@ -1,0 +1,11 @@
+---
+- name: Encrypt Sensitive Data
+  block:
+    - name: Run the encryption script
+      script: "ansible_playbook/files/encrypt_sensitive_data.sh"
+      register: script_result
+
+    - name: Fail if the script failed
+      fail:
+        msg: "Script execution failed with error: {{ script_result.stderr }}"
+      when: script_result.rc != 0

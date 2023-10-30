@@ -1,0 +1,24 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ariane-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ariane
+  template:
+    metadata:
+      labels:
+        app: ariane
+    spec:
+      containers:
+        - name: ariane
+          image: ariane-image
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: '0.5'
+              memory: 512Mi

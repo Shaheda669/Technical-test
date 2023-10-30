@@ -1,0 +1,22 @@
+---
+- name: Execute tasks
+  block:
+    - name: Change system open file limit for root
+      sysctl:
+        name: fs.file-max
+        value: 65536
+
+    - name: create user accounts
+      include_tasks: create_user_accounts.yml
+
+    - name: install docker
+      include_tasks: install_docker.yml
+
+    - name: download and copy files
+      include_tasks: download_and_copy_file.yml
+
+    - name: encrypt sensitive data
+      include_tasks: encrypt_sensitive_data.yml
+
+    - name: install nginx
+      include_tasks: install_nginx.yml

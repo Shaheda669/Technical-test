@@ -1,0 +1,20 @@
+---
+- name: Install Nginx and configure port forwarding
+  block:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+      tags: nginx
+
+    - name: Configure Nginx for port forwarding
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      tags: nginx
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+      tags: nginx

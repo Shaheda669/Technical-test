@@ -1,0 +1,24 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: falcon-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: falcon
+  template:
+    metadata:
+      labels:
+        app: falcon
+    spec:
+      containers:
+        - name: falcon
+          image: falcon-image
+          ports:
+            - containerPort: 4000
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi

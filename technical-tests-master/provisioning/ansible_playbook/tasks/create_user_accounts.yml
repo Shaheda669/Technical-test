@@ -1,0 +1,20 @@
+---
+- name: Create user accounts and copy info files
+  block:
+    - name: Create user accounts
+      user:
+        name: "{{ item.key }}"
+        comment: "{{ item.value.name }}"
+        groups: "{{ item.value.groups }}"
+        shell: /bin/bash
+        createhome: true
+        generate_ssh_key: true
+      with_dict: "{{ user_accounts }}"
+      tags: user
+
+    - name: Copy info files
+      copy:
+        content: "name: {{ item.value.name }}\nposition: {{ item.value.position }}\noffice: {{ item.value.office }}"
+        dest: "/home/{{ item.key }}/info"
+      with_dict: "{{ user_accounts }}"
+      tags: user
